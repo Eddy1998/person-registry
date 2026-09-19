@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Date, ForeignKey, String
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.database import Base
@@ -22,13 +22,6 @@ class Person(Base):
     )
 
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    person_id: Mapped[int] = mapped_column(
-        ForeignKey("persons.id"),
-        index=True,
-    )
-
 class PersonalData(Base):
     __tablename__ = "personal_data"
 
@@ -46,11 +39,30 @@ class PersonalData(Base):
         index=True,
     )
 
-    valid_from: Mapped[date] = mapped_column(Date)
-    valid_to: Mapped[date] = mapped_column(Date)
+    valid_from: Mapped[date] = mapped_column(Date, nullable=False)
+    valid_to: Mapped[date] = mapped_column(Date, nullable=False)
+
+    ts_gen: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    ts_update: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        onupdate=func.now(),
+    )
 
     person: Mapped["Person"] = relationship(
         back_populates="personal_data",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "valid_from < valid_to",
+            name="ck_personal_data_valid_period",
+        ),
     )
 
 
@@ -64,20 +76,32 @@ class Residence(Base):
         index=True,
     )
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    person_id: Mapped[int] = mapped_column(
-        ForeignKey("persons.id"),
-        index=True,
-    )
-
     street: Mapped[str] = mapped_column(String(200))
     city: Mapped[str] = mapped_column(String(100))
     postal_code: Mapped[str] = mapped_column(String(10))
 
-    valid_from: Mapped[date] = mapped_column(Date)
-    valid_to: Mapped[date] = mapped_column(Date)
+    valid_from: Mapped[date] = mapped_column(Date, nullable=False)
+    valid_to: Mapped[date] = mapped_column(Date, nullable=False)
+
+    ts_gen: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    ts_update: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        onupdate=func.now(),
+    )
 
     person: Mapped["Person"] = relationship(
         back_populates="residences",
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "valid_from < valid_to",
+            name="ck_residences_valid_period",
+        ),
     )
