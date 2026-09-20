@@ -3,3 +3,5 @@ psycopg==3.3.4
 psycopg-binary==3.3.4
 SQLAlchemy==2.0.52
 typing_extensions==4.16.0
+fastapi
+uvicorn[standard]
